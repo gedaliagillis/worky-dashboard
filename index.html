@@ -415,38 +415,52 @@
     // GitHub config
     const REPO_OWNER = 'gedaliagillis';
     const REPO_NAME = 'worky-dashboard';
-    const FILE_PATH = 'index.html';
+    const DATA_FILE_PATH = 'data/leads.json';
     
-    // Job leads data
-    let LEADS = [
-      { id: "1", company: "Mistral AI", role: "Product Operations Manager", pipeline: "startup", source: "Lever job board", status: "queue", notes: "5+ yrs exp, CoS/Strategy/Ops or consulting. Paris-based AI leader.", url: "https://jobs.lever.co/mistral/ef656934-7246-4d93-b341-c907c348c444", date: "2026-02-07" },
-      { id: "2", company: "Blossom Health", role: "Business Ops", pipeline: "startup", source: "TopStartups.io", status: "queue", notes: "AI for Psychiatry, NYC, early stage (1-10). Founded 2024.", url: "https://joinblossomhealth.com", date: "2026-02-07" },
-      { id: "3", company: "Dataiku", role: "Chief of Staff & Head of Strategic Initiatives", pipeline: "enterprise", source: "Greenhouse", status: "queue", notes: "CMO Office, marketing strategy ops.", url: "https://job-boards.greenhouse.io/dataiku/jobs/5693140004", date: "2026-02-07" },
-      { id: "4", company: "Valence", role: "Chief of Staff, People & Talent", pipeline: "startup", source: "Lever job board", status: "queue", notes: "AI-powered talent, hypergrowth.", url: "https://jobs.lever.co/valence/b00a0d55-ca0c-4b32-a84d-0783b930c60a", date: "2026-02-07" },
-      { id: "5", company: "TrialSpark", role: "Business Ops", pipeline: "startup", source: "TopStartups.io", status: "queue", notes: "Clinical trials, 1.9X faster enrollment. NYC, 101-200 employees.", url: "https://www.trialspark.com/careers", date: "2026-02-07" },
-      { id: "6", company: "Suno", role: "Strategy & Operations", pipeline: "startup", source: "Direct outreach", status: "sent", notes: "AI music generation, hypergrowth startup. Sent personalized email about scaling ops.", url: "https://suno.ai", date: "2026-02-07" },
-      { id: "7", company: "PermitFlow", role: "Operations/Strategy", pipeline: "startup", source: "Direct outreach", status: "sent", notes: "Construction permits automation. Y Combinator backed. Sent email about ops expertise.", url: "https://www.permitflow.com", date: "2026-02-07" },
-      { id: "8", company: "Stainless", role: "Business Operations", pipeline: "startup", source: "Direct outreach", status: "sent", notes: "Developer tools for API SDKs. Sent targeted email about growth ops.", url: "https://www.stainlessapi.com", date: "2026-02-07" },
-      { id: "9", company: "Formation Bio", role: "Strategic Operations", pipeline: "enterprise", source: "Direct outreach", status: "sent", notes: "Biotech/pharma tech platform. Sent email highlighting ops + healthcare background.", url: "https://www.formationbio.com", date: "2026-02-07" },
-      { id: "10", company: "Vise", role: "Operations", pipeline: "enterprise", source: "Direct outreach", status: "sent", notes: "AI wealth management. Sent email about scaling financial services ops.", url: "https://www.vise.com", date: "2026-02-07" }
-    ];
+    // Job leads data (loaded from GitHub)
+    let LEADS = [];
 
     let currentFilter = 'all';
     let currentStatus = null;
     let editingId = null;
 
     // Check for GitHub token on load
-    function init() {
+    async function init() {
       const token = localStorage.getItem('github_token');
       if (!token) {
         document.getElementById('setupBanner').style.display = 'block';
         document.getElementById('mainContent').style.display = 'none';
       } else {
+        await loadDataFromGitHub();
         renderLeads();
       }
     }
+    
+    // Load data from GitHub
+    async function loadDataFromGitHub() {
+      const GITHUB_TOKEN = localStorage.getItem('github_token');
+      if (!GITHUB_TOKEN) return;
+      
+      try {
+        const fileUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE_PATH}`;
+        const response = await fetch(fileUrl, {
+          headers: {
+            'Authorization': `token ${GITHUB_TOKEN}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+        
+        if (response.ok) {
+          const fileData = await response.json();
+          const content = atob(fileData.content);
+          LEADS = JSON.parse(content);
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+      }
+    }
 
-    function saveToken() {
+    async function saveToken() {
       const token = document.getElementById('tokenInput').value.trim();
       if (!token || !token.startsWith('ghp_')) {
         alert('Please enter a valid GitHub Personal Access Token (starts with ghp_)');
@@ -455,6 +469,7 @@
       localStorage.setItem('github_token', token);
       document.getElementById('setupBanner').style.display = 'none';
       document.getElementById('mainContent').style.display = 'block';
+      await loadDataFromGitHub();
       renderLeads();
     }
 
@@ -602,7 +617,7 @@
       
       try {
         // Get current file SHA
-        const fileUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+        const fileUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE_PATH}`;
         const response = await fetch(fileUrl, {
           headers: {
             'Authorization': `token ${GITHUB_TOKEN}`,
@@ -615,14 +630,9 @@
         }
         
         const fileData = await response.json();
-        const currentContent = atob(fileData.content);
         
-        // Replace LEADS array in the current file
-        const leadsJson = JSON.stringify(LEADS, null, 6);
-        const newContent = currentContent.replace(
-          /let LEADS = \[[\s\S]*?\];/,
-          `let LEADS = ${leadsJson};`
-        );
+        // Create new JSON content
+        const newContent = JSON.stringify(LEADS, null, 2);
         
         // Commit updated file
         const updateResponse = await fetch(fileUrl, {
