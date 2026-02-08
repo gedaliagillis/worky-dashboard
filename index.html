@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Worky Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    h1 {
+      color: white;
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 2em;
+    }
+    
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .save-status {
+      color: white;
+      font-size: 0.9em;
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 20px;
+    }
+    .save-status.saving { background: rgba(255,193,7,0.3); }
+    .save-status.success { background: rgba(76,175,80,0.3); }
+    .save-status.error { background: rgba(244,67,54,0.3); }
+    
+    /* Setup banner */
+    .setup-banner {
+      background: rgba(255,255,255,0.95);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-left: 4px solid #667eea;
+    }
+    .setup-banner h3 {
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .setup-banner input {
+      width: 100%;
+      max-width: 500px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+    
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .stat-number {
+      font-size: 2.5em;
+      font-weight: 700;
+      color: #667eea;
+    }
+    .stat-label {
+      font-size: 0.9em;
+      color: #666;
+      margin-top: 8px;
+    }
+    
+    /* Card */
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .card h2 {
+      font-size: 1.4em;
+      color: #333;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    /* Filters */
+    .filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 8px 16px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9em;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover { background: #f5f5f5; }
+    .filter-btn.active {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+    
+    /* Table */
+    .leads-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95em;
+    }
+    .leads-table th {
+      background: #f8f9fa;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #555;
+      border-bottom: 2px solid #eee;
+    }
+    .leads-table td {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      color: #333;
+    }
+    .leads-table tr:hover {
+      background: #f8f9fa;
+    }
+    
+    /* Status badges */
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.85em;
+      font-weight: 600;
+    }
+    .status-queue { background: #e3f2fd; color: #1976d2; }
+    .status-draft { background: #fff3e0; color: #f57c00; }
+    .status-sent { background: #e8f5e9; color: #388e3c; }
+    .status-replied { background: #f3e5f5; color: #7b1fa2; }
+    
+    /* Buttons */
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95em;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.85em;
+    }
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+    }
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+    .btn-secondary {
+      background: #6b7280;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background: #4b5563;
+    }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      font-size: 1.5em;
+      font-weight: 600;
+      margin-bottom: 24px;
+      color: #333;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: #555;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.95em;
+      font-family: inherit;
+    }
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .modal-actions button {
+      flex: 1;
+    }
+    
+    /* Action buttons in table */
+    .action-btns {
+      display: flex;
+      gap: 6px;
+    }
+    
+    /* Updated timestamp */
+    .updated {
+      text-align: center;
+      color: rgba(255,255,255,0.8);
+      font-size: 0.85em;
+      margin-top: 20px;
+    }
+    
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <!-- Setup Banner (shown if token not configured) -->
+  <div class="setup-banner" id="setupBanner" style="display:none;">
+    <h3>🔐 First-Time Setup</h3>
+    <p>Enter your GitHub Personal Access Token to enable auto-save:</p>
+    <input type="password" id="tokenInput" placeholder="ghp_...">
+    <button class="btn btn-primary" onclick="saveToken()">Save Token</button>
+    <p style="font-size:0.85em; color:#666; margin-top:8px;">
+      Your token is stored securely in your browser and never leaves your device.
+    </p>
+  </div>
+
+  <div class="container" id="mainContent">
+    <div class="header">
+      <h1>💼 Worky Dashboard</h1>
+      <div class="save-status" id="saveStatus">Ready</div>
+    </div>
+    
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number" id="stat-queue">5</div>
+        <div class="stat-label">In Queue</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-sent">5</div>
+        <div class="stat-label">Sent</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-replied">0</div>
+        <div class="stat-label">Replies</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-total">10</div>
+        <div class="stat-label">Total Leads</div>
+      </div>
+    </div>
+    
+    <!-- Job Leads -->
+    <div class="card">
+      <h2>
+        <span>🎯 Job Leads Pipeline</span>
+        <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Lead</button>
+      </h2>
+      
+      <div class="filters">
+        <button class="filter-btn active" onclick="filterLeads('all')">All</button>
+        <button class="filter-btn" onclick="filterLeads('startup')">🚀 Startups</button>
+        <button class="filter-btn" onclick="filterLeads('enterprise')">🏢 Enterprise</button>
+        <span style="color:#ccc; margin: 0 8px;">|</span>
+        <button class="filter-btn" onclick="filterStatus('queue')">📋 Queue</button>
+        <button class="filter-btn" onclick="filterStatus('sent')">📧 Sent</button>
+        <button class="filter-btn" onclick="filterStatus('replied')">✅ Replied</button>
+      </div>
+      
+      <table class="leads-table" id="leadsTable">
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th>Role</th>
+            <th>Pipeline</th>
+            <th>Source</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="leadsBody">
+          <!-- Data loaded from JavaScript -->
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="updated">
+      Last updated: <span id="lastUpdated">Feb 8, 2026</span>
+    </div>
+  </div>
+
+  <!-- Edit/Add Modal -->
+  <div class="modal" id="leadModal">
+    <div class="modal-content">
+      <div class="modal-header" id="modalTitle">Add Lead</div>
+      <form id="leadForm" onsubmit="saveLead(event)">
+        <input type="hidden" id="leadId">
+        
+        <div class="form-group">
+          <label>Company *</label>
+          <input type="text" id="company" required>
+        </div>
+        
+        <div class="form-group">
+          <label>Role *</label>
+          <input type="text" id="role" required>
+        </div>
+        
+        <div class="form-group">
+          <label>Pipeline *</label>
+          <select id="pipeline" required>
+            <option value="startup">🚀 Startup</option>
+            <option value="enterprise">🏢 Enterprise</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Source</label>
+          <input type="text" id="source" placeholder="e.g. LinkedIn, Direct outreach">
+        </div>
+        
+        <div class="form-group">
+          <label>Status *</label>
+          <select id="status" required>
+            <option value="queue">📋 Queue</option>
+            <option value="draft">📝 Draft</option>
+            <option value="sent">📧 Sent</option>
+            <option value="replied">✅ Replied</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>URL</label>
+          <input type="url" id="url" placeholder="https://...">
+        </div>
+        
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea id="notes" placeholder="Additional notes..."></textarea>
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // GitHub config
+    const REPO_OWNER = 'gedaliagillis';
+    const REPO_NAME = 'worky-dashboard';
+    const FILE_PATH = 'index.html';
+    
+    // Job leads data
+    let LEADS = [
+      { id: "1", company: "Mistral AI", role: "Product Operations Manager", pipeline: "startup", source: "Lever job board", status: "queue", notes: "5+ yrs exp, CoS/Strategy/Ops or consulting. Paris-based AI leader.", url: "https://jobs.lever.co/mistral/ef656934-7246-4d93-b341-c907c348c444", date: "2026-02-07" },
+      { id: "2", company: "Blossom Health", role: "Business Ops", pipeline: "startup", source: "TopStartups.io", status: "queue", notes: "AI for Psychiatry, NYC, early stage (1-10). Founded 2024.", url: "https://joinblossomhealth.com", date: "2026-02-07" },
+      { id: "3", company: "Dataiku", role: "Chief of Staff & Head of Strategic Initiatives", pipeline: "enterprise", source: "Greenhouse", status: "queue", notes: "CMO Office, marketing strategy ops.", url: "https://job-boards.greenhouse.io/dataiku/jobs/5693140004", date: "2026-02-07" },
+      { id: "4", company: "Valence", role: "Chief of Staff, People & Talent", pipeline: "startup", source: "Lever job board", status: "queue", notes: "AI-powered talent, hypergrowth.", url: "https://jobs.lever.co/valence/b00a0d55-ca0c-4b32-a84d-0783b930c60a", date: "2026-02-07" },
+      { id: "5", company: "TrialSpark", role: "Business Ops", pipeline: "startup", source: "TopStartups.io", status: "queue", notes: "Clinical trials, 1.9X faster enrollment. NYC, 101-200 employees.", url: "https://www.trialspark.com/careers", date: "2026-02-07" },
+      { id: "6", company: "Suno", role: "Strategy & Operations", pipeline: "startup", source: "Direct outreach", status: "sent", notes: "AI music generation, hypergrowth startup. Sent personalized email about scaling ops.", url: "https://suno.ai", date: "2026-02-07" },
+      { id: "7", company: "PermitFlow", role: "Operations/Strategy", pipeline: "startup", source: "Direct outreach", status: "sent", notes: "Construction permits automation. Y Combinator backed. Sent email about ops expertise.", url: "https://www.permitflow.com", date: "2026-02-07" },
+      { id: "8", company: "Stainless", role: "Business Operations", pipeline: "startup", source: "Direct outreach", status: "sent", notes: "Developer tools for API SDKs. Sent targeted email about growth ops.", url: "https://www.stainlessapi.com", date: "2026-02-07" },
+      { id: "9", company: "Formation Bio", role: "Strategic Operations", pipeline: "enterprise", source: "Direct outreach", status: "sent", notes: "Biotech/pharma tech platform. Sent email highlighting ops + healthcare background.", url: "https://www.formationbio.com", date: "2026-02-07" },
+      { id: "10", company: "Vise", role: "Operations", pipeline: "enterprise", source: "Direct outreach", status: "sent", notes: "AI wealth management. Sent email about scaling financial services ops.", url: "https://www.vise.com", date: "2026-02-07" }
+    ];
+
+    let currentFilter = 'all';
+    let currentStatus = null;
+    let editingId = null;
+
+    // Check for GitHub token on load
+    function init() {
+      const token = localStorage.getItem('github_token');
+      if (!token) {
+        document.getElementById('setupBanner').style.display = 'block';
+        document.getElementById('mainContent').style.display = 'none';
+      } else {
+        renderLeads();
+      }
+    }
+
+    function saveToken() {
+      const token = document.getElementById('tokenInput').value.trim();
+      if (!token || !token.startsWith('ghp_')) {
+        alert('Please enter a valid GitHub Personal Access Token (starts with ghp_)');
+        return;
+      }
+      localStorage.setItem('github_token', token);
+      document.getElementById('setupBanner').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+      renderLeads();
+    }
+
+    // Render leads table
+    function renderLeads() {
+      const tbody = document.getElementById('leadsBody');
+      const filtered = LEADS.filter(lead => {
+        if (currentFilter !== 'all' && lead.pipeline !== currentFilter) return false;
+        if (currentStatus && lead.status !== currentStatus) return false;
+        return true;
+      });
+
+      tbody.innerHTML = filtered.map(lead => `
+        <tr>
+          <td><strong>${lead.company}</strong></td>
+          <td>${lead.role}</td>
+          <td>${lead.pipeline === 'startup' ? '🚀' : '🏢'} ${lead.pipeline}</td>
+          <td>${lead.source || '-'}</td>
+          <td><span class="status-badge status-${lead.status}">${lead.status}</span></td>
+          <td>${lead.date}</td>
+          <td class="action-btns">
+            <button class="btn btn-primary btn-sm" onclick="editLead('${lead.id}')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteLead('${lead.id}')">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+
+      updateStats();
+      document.getElementById('lastUpdated').textContent = new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+
+    // Update stats
+    function updateStats() {
+      document.getElementById('stat-queue').textContent = LEADS.filter(l => l.status === 'queue').length;
+      document.getElementById('stat-sent').textContent = LEADS.filter(l => l.status === 'sent').length;
+      document.getElementById('stat-replied').textContent = LEADS.filter(l => l.status === 'replied').length;
+      document.getElementById('stat-total').textContent = LEADS.length;
+    }
+
+    // Filter functions
+    function filterLeads(type) {
+      currentFilter = type;
+      currentStatus = null;
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      renderLeads();
+    }
+
+    function filterStatus(status) {
+      currentStatus = status;
+      currentFilter = 'all';
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      renderLeads();
+    }
+
+    // Modal functions
+    function openAddModal() {
+      editingId = null;
+      document.getElementById('modalTitle').textContent = 'Add Lead';
+      document.getElementById('leadForm').reset();
+      document.getElementById('leadModal').classList.add('active');
+    }
+
+    function editLead(id) {
+      editingId = id;
+      const lead = LEADS.find(l => l.id === id);
+      if (!lead) return;
+      
+      document.getElementById('modalTitle').textContent = 'Edit Lead';
+      document.getElementById('leadId').value = lead.id;
+      document.getElementById('company').value = lead.company;
+      document.getElementById('role').value = lead.role;
+      document.getElementById('pipeline').value = lead.pipeline;
+      document.getElementById('source').value = lead.source || '';
+      document.getElementById('status').value = lead.status;
+      document.getElementById('url').value = lead.url || '';
+      document.getElementById('notes').value = lead.notes || '';
+      
+      document.getElementById('leadModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('leadModal').classList.remove('active');
+      document.getElementById('leadForm').reset();
+      editingId = null;
+    }
+
+    // Save lead (add or update)
+    function saveLead(event) {
+      event.preventDefault();
+      
+      const formData = {
+        company: document.getElementById('company').value,
+        role: document.getElementById('role').value,
+        pipeline: document.getElementById('pipeline').value,
+        source: document.getElementById('source').value,
+        status: document.getElementById('status').value,
+        url: document.getElementById('url').value,
+        notes: document.getElementById('notes').value,
+        date: new Date().toISOString().split('T')[0]
+      };
+      
+      if (editingId) {
+        // Update existing
+        const index = LEADS.findIndex(l => l.id === editingId);
+        if (index !== -1) {
+          LEADS[index] = { ...LEADS[index], ...formData };
+        }
+      } else {
+        // Add new
+        const newId = String(Math.max(...LEADS.map(l => parseInt(l.id))) + 1);
+        LEADS.push({ id: newId, ...formData });
+      }
+      
+      closeModal();
+      renderLeads();
+      saveToGitHub();
+    }
+
+    // Delete lead
+    function deleteLead(id) {
+      if (!confirm('Delete this lead?')) return;
+      
+      LEADS = LEADS.filter(l => l.id !== id);
+      renderLeads();
+      saveToGitHub();
+    }
+
+    // Save to GitHub
+    async function saveToGitHub() {
+      const GITHUB_TOKEN = localStorage.getItem('github_token');
+      if (!GITHUB_TOKEN) {
+        alert('GitHub token not configured. Please refresh and enter your token.');
+        return;
+      }
+      
+      const statusEl = document.getElementById('saveStatus');
+      statusEl.textContent = 'Saving...';
+      statusEl.className = 'save-status saving';
+      
+      try {
+        // Get current file SHA
+        const fileUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+        const response = await fetch(fileUrl, {
+          headers: {
+            'Authorization': `token ${GITHUB_TOKEN}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch file');
+        }
+        
+        const fileData = await response.json();
+        const currentContent = atob(fileData.content);
+        
+        // Replace LEADS array in the current file
+        const leadsJson = JSON.stringify(LEADS, null, 6);
+        const newContent = currentContent.replace(
+          /let LEADS = \[[\s\S]*?\];/,
+          `let LEADS = ${leadsJson};`
+        );
+        
+        // Commit updated file
+        const updateResponse = await fetch(fileUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${GITHUB_TOKEN}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: `Update leads - ${new Date().toISOString()}`,
+            content: btoa(unescape(encodeURIComponent(newContent))),
+            sha: fileData.sha
+          })
+        });
+        
+        if (!updateResponse.ok) {
+          throw new Error('Failed to update file');
+        }
+        
+        statusEl.textContent = 'Saved to GitHub ✓';
+        statusEl.className = 'save-status success';
+        
+        setTimeout(() => {
+          statusEl.textContent = 'Ready';
+          statusEl.className = 'save-status';
+        }, 3000);
+        
+      } catch (error) {
+        console.error('Save error:', error);
+        statusEl.textContent = 'Save failed ✗';
+        statusEl.className = 'save-status error';
+        
+        setTimeout(() => {
+          statusEl.textContent = 'Ready';
+          statusEl.className = 'save-status';
+        }, 3000);
+      }
+    }
+
+    // Initial load
+    init();
+    
+    // Close modal on background click
+    document.getElementById('leadModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+  </script>
+</body>
+</html>
