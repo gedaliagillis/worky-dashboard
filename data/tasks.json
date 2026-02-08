@@ -1,0 +1,26 @@
+[
+  {
+    "id": "t1",
+    "text": "Follow up with hot leads from outreach batch",
+    "done": false,
+    "category": "outreach",
+    "priority": "high",
+    "created": "2026-02-07"
+  },
+  {
+    "id": "t2",
+    "text": "Research 5 new startup ops roles",
+    "done": false,
+    "category": "research",
+    "priority": "medium",
+    "created": "2026-02-07"
+  },
+  {
+    "id": "t3",
+    "text": "Update resume with recent projects",
+    "done": false,
+    "category": "prep",
+    "priority": "medium",
+    "created": "2026-02-07"
+  }
+]
