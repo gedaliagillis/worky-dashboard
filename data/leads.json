@@ -57,12 +57,12 @@
     "role": "Business Ops",
     "pipeline": "startup",
     "source": "TopStartups.io",
-    "status": "queue",
-    "notes": "Clinical trials, 1.9X faster enrollment. NYC, 101-200 employees.",
+    "status": "sent",
+    "notes": "Business Ops role. Operations is pivotal to clinical trial success.",
     "url": "https://www.trialspark.com/careers",
     "date": "2026-02-07",
-    "contact": "",
-    "lastUpdate": "2026-02-07"
+    "contact": "Dale Levine Klasko (Senior TA)",
+    "lastUpdate": "2026-02-09"
   },
   {
     "id": "6",
